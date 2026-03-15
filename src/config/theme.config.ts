@@ -19,7 +19,7 @@ export const themeConfig = {
     showTabBar: true,
     showBreadcrumb: true,
     fixedTabBar: true,
-    showGithub: true,
+    showGithub: false,
     githubUrl: 'https://github.com/tabtab-dev/tabtab-admin',
   } as Partial<LayoutConfig>,
   customThemes: {} as Record<string, {

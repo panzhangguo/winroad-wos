@@ -334,7 +334,7 @@ async function copyConfig() {
     </div>
 
     <!-- GitHub 设置 -->
-    <div class="space-y-4">
+    <div class="space-y-4 hidden">
       <div class="flex items-center gap-2 text-sm font-medium text-foreground">
         <Github class="h-4 w-4 text-muted-foreground" />
         <span>GitHub</span>

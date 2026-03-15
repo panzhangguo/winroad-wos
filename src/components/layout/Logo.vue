@@ -74,20 +74,43 @@ const borderRadius = computed(() => {
         shape-rendering="geometricPrecision"
       />
 
-      <!-- 第一个 T - 主白色 -->
-      <g transform="translate(50, 65)">
-        <!-- 横线 -->
-        <rect x="0" y="0" width="70" height="14" rx="7" fill="white" shape-rendering="geometricPrecision" />
-        <!-- 竖线 -->
-        <rect x="28" y="0" width="14" height="70" rx="7" fill="white" shape-rendering="geometricPrecision" />
+      <!-- 第二个 W - 使用主题前景色（先渲染，层级在下方） -->
+      <g transform="translate(115, 105) scale(0.85)" class="logo-t-secondary">
+        <path d="M -55 -40
+                 L -40 -40
+                 L -20 25
+                 L 0 -40
+                 L 15 -40
+                 L 35 25
+                 L 55 -40
+                 L 70 -40
+                 L 42 40
+                 L 27 40
+                 L 7.5 -20
+                 L -12 40
+                 L -27 40
+                 Z"
+              shape-rendering="geometricPrecision" />
       </g>
 
-      <!-- 第二个 T - 使用主题前景色 -->
-      <g transform="translate(80, 55)" class="logo-t-secondary">
-        <!-- 横线 -->
-        <rect x="0" y="0" width="70" height="14" rx="7" shape-rendering="geometricPrecision" />
-        <!-- 竖线 -->
-        <rect x="28" y="0" width="14" height="70" rx="7" shape-rendering="geometricPrecision" />
+      <!-- 第一个 W - 主白色（后渲染，层级在上方，盖住第二个） -->
+      <g transform="translate(90, 105) scale(0.85)" fill="white">
+        <!-- 使用 path 绘制 W，确保连接点精确 -->
+        <path d="M -55 -40
+                 L -40 -40
+                 L -20 25
+                 L 0 -40
+                 L 15 -40
+                 L 35 25
+                 L 55 -40
+                 L 70 -40
+                 L 42 40
+                 L 27 40
+                 L 7.5 -20
+                 L -12 40
+                 L -27 40
+                 Z"
+              shape-rendering="geometricPrecision" />
       </g>
     </svg>
   </div>

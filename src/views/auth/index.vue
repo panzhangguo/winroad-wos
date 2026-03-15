@@ -135,10 +135,10 @@ async function handleLoginClick() {
  * 特性列表数据
  */
 const features = [
-  { icon: BarChart3, text: '实时数据分析' },
-  { icon: Users, text: '团队协作管理' },
-  { icon: Layers, text: '模块化架构' },
-  { icon: Zap, text: '高性能体验' },
+  { icon: BarChart3, text: '完善的管理模块' },
+  { icon: Users, text: '简洁的流程' },
+  { icon: Layers, text: '现代化的UI设计' },
+  { icon: Zap, text: '易于使用的体验' },
 ]
 </script>
 
@@ -172,25 +172,25 @@ const features = [
           >
             <Logo :size="40" />
           </div>
-          <span class="text-xl font-bold text-white tracking-tight">TABTAB</span>
+          <span class="text-xl font-bold text-white tracking-tight">WINROAD</span>
         </div>
 
         <!-- 主文案 -->
         <div class="space-y-8 animate-fade-in-up">
           <div class="space-y-4">
-            <div
+            <!-- <div
               class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-white/90 text-sm"
               :style="{ borderRadius: `calc(var(--radius) * 2)` }"
             >
               <Sparkles class="w-4 h-4" />
               <span>全新版本 1.0 现已发布</span>
-            </div>
+            </div> -->
             <h1 class="text-4xl xl:text-5xl font-bold text-white leading-tight">
-              智能化<br>
-              <span class="text-white/80">后台管理系统</span>
+              万榕信息<br>
+              <span class="text-white/80">工单管理系统</span>
             </h1>
             <p class="text-lg text-white/70 max-w-md leading-relaxed">
-              融合现代设计理念与强大功能，为您的团队提供高效、直观的数据管理体验。
+              融合现代设计理念与完善的功能，为您提供高效、直观的工单管理体验。
             </p>
           </div>
 
@@ -216,7 +216,7 @@ const features = [
 
         <!-- 底部信息 -->
         <div class="flex items-center gap-6 text-white/50 text-sm animate-fade-in">
-          <span>© 2026 TABTAB</span>
+          <span>© 2026 万榕信息科技</span>
           <span class="w-1 h-1 rounded-full bg-white/30" />
           <a href="#" class="hover:text-white/80 transition-colors">隐私政策</a>
           <a href="#" class="hover:text-white/80 transition-colors">服务条款</a>
@@ -349,7 +349,7 @@ const features = [
 
         <!-- 演示账户 -->
         <div
-          class="p-4 bg-muted/50 border border-border/50 animate-fade-in-up animation-delay-3"
+          class="p-4 bg-muted/50 border border-border/50 animate-fade-in-up animation-delay-3 hidden"
           :style="{ borderRadius: `calc(var(--radius) * 1.5)` }"
         >
           <div class="flex items-center gap-2 mb-2">

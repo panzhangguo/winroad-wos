@@ -52,10 +52,10 @@ onUnmounted(() => {
   <!-- 使用 TailwindCSS 的 grid 布局替代多层 flex 嵌套 -->
   <div class="h-screen bg-background grid grid-rows-[auto_1fr]">
     <!-- 顶部导航栏 - 全屏时隐藏 -->
-    <Header
+    <!-- <Header
       v-if="!isFullscreen"
       :sidebar-collapsed="sidebarCollapsed"
-    />
+    /> -->
 
     <!-- 主体区域：使用 AppSidebar 内部的 ResizablePanelGroup 处理布局 -->
     <AppSidebar
@@ -63,8 +63,14 @@ onUnmounted(() => {
       v-model:collapsed="sidebarCollapsed"
       class="overflow-hidden"
     >
+      <!-- 顶部导航栏 - 全屏时隐藏 -->
+      <Header
+        v-if="!isFullscreen"
+        :sidebar-collapsed="sidebarCollapsed"
+      />
+
       <!-- 主内容区 -->
-      <div class="h-full flex flex-col min-w-0">
+      <div class="h-[calc(100vh-3rem)] sm:h-[calc(100vh-3.5rem)] flex flex-col min-w-0">
         <!-- 标签栏 - 根据主题配置显示/隐藏 -->
         <TabBar
           v-if="themeStore.layoutConfig.showTabBar"
