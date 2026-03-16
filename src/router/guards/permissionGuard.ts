@@ -67,7 +67,7 @@ export function checkRole(
     return false
   }
 
-  const userRole = authStore.user.role
+  const userRole = authStore.user.roleName
 
   if (mode === 'all') {
     return roles.every(role => userRole === role)

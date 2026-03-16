@@ -18,7 +18,7 @@ import {
 /**
  * 应用标题
  */
-const APP_TITLE = import.meta.env.VITE_APP_TITLE || 'TabTab Admin'
+const APP_TITLE = import.meta.env.VITE_APP_TITLE || 'WINROAD WOS'
 
 /**
  * 从本地存储加载语言设置

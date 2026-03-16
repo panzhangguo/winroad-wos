@@ -10,13 +10,13 @@ export const useAuthStore = defineStore(
     const isLoading = ref(false)
 
     const isAuthenticated = computed(() => !!token.value && !!user.value)
-    const isAdmin = computed(() => user.value?.role === 'admin')
+    const isAdmin = computed(() => user.value?.isAdministrator === true)
 
-    const login = async (email: string, password: string): Promise<boolean> => {
+    const login = async (account: string, password: string, code?: string, timestamp?: string): Promise<boolean> => {
       isLoading.value = true
       try {
-        const response = await authApi.login({ email, password }) as unknown as { user: User, token: string }
-        user.value = response.user
+        const response = await authApi.login({ account, password, code, timestamp }) as unknown as { token: string }
+        // user.value = response.user
         token.value = response.token
         return true
       }
@@ -47,8 +47,8 @@ export const useAuthStore = defineStore(
         return false
 
       try {
-        const userData = await authApi.getCurrentUser() as unknown as User
-        user.value = userData
+        const userData = await authApi.getCurrentUser() as unknown as { userInfo: User }
+        user.value = userData.userInfo
         return true
       }
       catch (error) {
@@ -59,8 +59,9 @@ export const useAuthStore = defineStore(
       }
     }
 
-    const hasPermission = (permission: string): boolean => {
-      return user.value?.permissions.includes(permission) || false
+    const hasPermission = (_permission: string): boolean => {
+      // return user.value?.permissions.includes(permission) || false
+      return true
     }
 
     const initialize = async (): Promise<void> => {

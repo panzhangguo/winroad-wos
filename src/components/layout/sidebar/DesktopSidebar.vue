@@ -155,7 +155,7 @@ function handleToggleCollapse(): void {
  * 用户姓名首字母
  */
 const userInitials = computed(() => {
-  return authStore.user?.name?.charAt(0).toUpperCase() || 'U'
+  return authStore.user?.userName?.charAt(0).toUpperCase() || 'U'
 })
 
 /**
@@ -239,8 +239,8 @@ watch(() => themeStore.layoutConfig.sidebarWidth, (newWidth) => {
         >
           <Logo :size="collapsed ? 36 : 40" :collapsed="collapsed" />
           <div v-if="!collapsed" class="flex flex-col min-w-0">
-            <span class="text-sm font-bold tracking-tight truncate">TabTab Admin</span>
-            <span class="text-[10px] text-muted-foreground truncate">管理系统</span>
+            <span class="text-sm font-bold tracking-tight truncate">WINROAD WOS</span>
+            <span class="text-[10px] text-muted-foreground truncate">工单系统</span>
           </div>
         </div>
         <!-- 折叠按钮 - Logo 下方 -->
@@ -355,10 +355,10 @@ watch(() => themeStore.layoutConfig.sidebarWidth, (newWidth) => {
                       <!-- 用户信息 -->
                       <div class="flex flex-col min-w-0 flex-1 text-left">
                         <span class="text-sm font-medium truncate group-hover:text-primary transition-colors duration-200">
-                          {{ authStore.user?.name || '用户' }}
+                          {{ authStore.user?.userName || '用户' }}
                         </span>
                         <span class="text-[11px] text-muted-foreground truncate">
-                          {{ authStore.user?.email || 'user@example.com' }}
+                          {{ authStore.user?.userAccount || 'user@example.com' }}
                         </span>
                       </div>
                       <!-- 下拉指示器 -->
@@ -371,7 +371,7 @@ watch(() => themeStore.layoutConfig.sidebarWidth, (newWidth) => {
                         {{ t('common.sidebar.signedInAs') }}
                       </p>
                       <p class="text-sm font-semibold truncate">
-                        {{ authStore.user?.email || 'user@example.com' }}
+                        {{ authStore.user?.userAccount || 'user@example.com' }}
                       </p>
                     </div>
                     <DropdownMenuSeparator />

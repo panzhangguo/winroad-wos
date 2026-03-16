@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Home, Github } from 'lucide-vue-next'
+import { Github, Home } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
 import { useAppStore } from '@/stores/global/app'
 import { useMenuStore } from '@/stores/global/menu'

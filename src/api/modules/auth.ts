@@ -9,8 +9,10 @@ import { request } from '../client'
  * 登录请求参数
  */
 export interface LoginParams {
-  email: string
+  account: string
   password: string
+  code?: string
+  timestamp?: string
 }
 
 /**
@@ -38,8 +40,13 @@ export const authApi = {
    * @param data - 登录参数
    * @returns 登录响应
    */
-  login: (data: LoginParams) =>
-    request.post<LoginResponse>('/auth/login', data),
+  login: (data: LoginParams) => {
+    return request.post<LoginResponse>('/oauth/login', data, {
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+    })
+  },
 
   /**
    * 用户登出
@@ -51,7 +58,7 @@ export const authApi = {
    * 获取当前用户信息
    * @returns 用户信息
    */
-  getCurrentUser: () => request.get<User>('/auth/me'),
+  getCurrentUser: () => request.get<{ userInfo: User }>('/oauth/CurrentUser'),
 
   /**
    * 更新当前用户个人资料

@@ -101,7 +101,7 @@ export function requestInterceptor(method: Method) {
   // 添加认证 Token
   const token = getTokenFromStorage()
   if (token) {
-    method.config.headers.Authorization = `Bearer ${token}`
+    method.config.headers.Authorization = `${token}`
   }
 
   // 设置默认 Content-Type

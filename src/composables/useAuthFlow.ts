@@ -9,8 +9,10 @@ import { useMenuStore } from '@/stores/global/menu'
 import { normalizeError } from '@/utils/errorHandler'
 
 export interface LoginCredentials {
-  email: string
+  account: string
   password: string
+  code?: string
+  timestamp: string
 }
 
 export interface AuthFlowResult {
@@ -33,19 +35,27 @@ export function useAuthFlow() {
    */
   const login = async (credentials: LoginCredentials): Promise<AuthFlowResult> => {
     try {
-      const success = await authStore.login(credentials.email, credentials.password)
+      const success = await authStore.login(credentials.account, credentials.password, credentials.code, credentials.timestamp)
 
       if (!success) {
-        return { success: false, error: '登录失败，请检查邮箱和密码' }
+        return { success: false, error: '登录失败，请检查账号和密码' }
       }
 
-      // 登录成功后获取菜单
-      const menuSuccess = await menuStore.fetchMenus()
-      if (!menuSuccess) {
-        // 菜单获取失败，执行登出清理
+      // 登录成功后获取用户信息
+      const userSuccess = await authStore.fetchCurrentUser()
+      if (!userSuccess) {
+        // 用户信息获取失败，执行登出清理
         await authStore.logout()
-        return { success: false, error: '获取菜单失败，请稍后重试' }
+        return { success: false, error: '获取用户信息失败，请稍后重试' }
       }
+
+      // // 登录成功后获取菜单
+      // const menuSuccess = await menuStore.fetchMenus()
+      // if (!menuSuccess) {
+      //   // 菜单获取失败，执行登出清理
+      //   await authStore.logout()
+      //   return { success: false, error: '获取菜单失败，请稍后重试' }
+      // }
 
       return { success: true }
     }

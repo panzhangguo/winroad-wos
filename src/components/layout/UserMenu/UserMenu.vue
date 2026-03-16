@@ -43,10 +43,11 @@ watch(() => themeStore.currentMode, () => {
  * 用户信息
  */
 const userInfo = computed(() => ({
-  name: authStore.user?.name || t('common.header.user'),
-  email: authStore.user?.email || 'user@example.com',
-  avatar: authStore.user?.avatar,
-  role: authStore.user?.role || 'admin',
+  name: authStore.user?.userName || t('common.header.user'),
+  account: authStore.user?.userAccount || 'user@example.com',
+  avatar: authStore.user?.headIcon,
+  role: authStore.user?.isAdministrator === true ? 'admin' : 'user',
+  roleName: authStore.user.roleName.split(',')[0],
 }))
 
 /**
@@ -218,7 +219,9 @@ function getIconClass(variant: string): string {
           <span class="text-sm font-medium leading-tight truncate max-w-[100px]">
             {{ userInfo.name }}
           </span>
-          <span class="text-[10px] text-muted-foreground leading-tight">{{ t('common.header.admin') }}</span>
+          <span class="text-[10px] text-muted-foreground leading-tight">
+            {{ userInfo.roleName }}
+          </span>
         </div>
 
         <ChevronDown class="h-3.5 w-3.5 text-muted-foreground/70 hidden md:block relative z-10 transition-transform duration-200 group-data-[state=open]:rotate-180" />
@@ -248,7 +251,7 @@ function getIconClass(variant: string): string {
               {{ userInfo.name }}
             </p>
             <p class="text-[11px] text-muted-foreground truncate">
-              {{ userInfo.email }}
+              {{ userInfo.account }}
             </p>
             <div class="flex items-center gap-1 mt-0.5">
               <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-primary/10 text-primary">

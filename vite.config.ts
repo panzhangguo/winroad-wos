@@ -8,6 +8,19 @@ import { defineConfig } from 'vite'
 
 export default defineConfig(() => {
   return {
+    server: {
+      proxy: {
+        '/api': {
+          target: 'http://192.168.0.15/api',
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/api/, ''),
+          // 输出正式请求路径
+          logLevel: 'debug',
+          // 开启 HTTPS
+          secure: false,
+        },
+      },
+    },
     plugins: [
       vue(),
       tailwindcss(),

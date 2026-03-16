@@ -110,7 +110,7 @@ export default {
     themeDesc: '切换明暗主题',
     language: '语言设置',
     logoutDesc: '安全退出系统',
-    userMenuFooter: 'TabTab Admin · 让管理更简单',
+    userMenuFooter: 'WINROAD WOS · 让管理更简单',
     adminRole: '管理员',
     userRole: '普通用户',
   },

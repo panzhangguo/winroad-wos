@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { FormSchema, TFormExpose } from '@/components/business/TForm'
+import { md5 } from 'js-md5'
 import {
   ArrowRight,
   BarChart3,
@@ -9,11 +10,11 @@ import {
   Lock,
   Mail,
   Moon,
-  Sparkles,
   Sun,
   Users,
   Zap,
 } from 'lucide-vue-next'
+import { onMounted, ref } from 'vue'
 import { TForm } from '@/components/business/TForm'
 import Logo from '@/components/layout/Logo.vue'
 import { Button } from '@/components/ui/button'
@@ -34,10 +35,29 @@ const formRef = ref<TFormExpose>()
  * 表单数据 - 默认填充演示账户
  */
 const formData = ref({
-  email: 'admin@example.com',
-  password: 'admin123',
+  account: 'custest1',
+  password: 'WR.12345678',
+  code: '',
+  timestamp: '',
   rememberMe: true,
 })
+
+/**
+ * 验证码图片URL
+ */
+const captchaUrl = ref('')
+
+/**
+ * 刷新验证码
+ */
+async function refreshCaptcha() {
+  // 这里需要调用后端API获取验证码图片
+  // 示例: captchaUrl.value = `/api/auth/captcha?${Date.now()}`
+  // 暂时使用占位符
+  const timestamp = `${Math.random()}`
+  formData.value.timestamp = timestamp
+  captchaUrl.value = `/api/oauth/ImageCode/3/${timestamp}`
+}
 
 /**
  * 登录加载状态 - 从 useAuthFlow 获取
@@ -56,13 +76,13 @@ const loginSchema: FormSchema = {
   layout: 'vertical',
   fields: [
     {
-      name: 'email',
+      name: 'account',
       type: 'input',
-      label: '邮箱地址',
+      label: '账号',
       placeholder: 'admin@example.com',
       rules: [
-        { required: true, message: '请输入邮箱地址' },
-        { type: 'email', message: '请输入有效的邮箱地址' },
+        { required: true, message: '请输入账号' },
+        { type: 'account', message: '请输入有效的账号' },
       ],
       props: {
         size: 'large',
@@ -84,6 +104,15 @@ const loginSchema: FormSchema = {
         autocomplete: 'current-password',
       },
     },
+    {
+      name: 'code',
+      type: 'custom',
+      label: '验证码',
+      slot: 'captcha',
+      rules: [
+        { required: true, message: '请输入验证码' },
+      ],
+    },
   ],
   actions: {
     showSubmit: false,
@@ -99,8 +128,10 @@ async function handleLogin(values: Record<string, any>) {
   errorMessage.value = ''
 
   const result = await login({
-    email: values.email,
-    password: values.password,
+    account: values.account,
+    password: md5(values.password),
+    code: values.code,
+    timestamp: values.timestamp,
   })
 
   if (result.success) {
@@ -108,6 +139,8 @@ async function handleLogin(values: Record<string, any>) {
   }
   else {
     errorMessage.value = result.error || '登录失败，请检查账户信息'
+    // 登录失败后刷新验证码
+    refreshCaptcha()
   }
 }
 
@@ -140,6 +173,11 @@ const features = [
   { icon: Layers, text: '现代化的UI设计' },
   { icon: Zap, text: '易于使用的体验' },
 ]
+
+// 组件挂载时初始化验证码
+onMounted(() => {
+  refreshCaptcha()
+})
 </script>
 
 <template>
@@ -303,7 +341,41 @@ const features = [
             :loading="isLoading"
             @submit="handleLogin"
             @finish-failed="handleFinishFailed"
-          />
+          >
+            <!-- 验证码自定义插槽 -->
+            <template #captcha="{ disabled }">
+              <div class="flex items-center gap-3">
+                <a-input
+                  v-model:value="formData.code"
+                  placeholder="请输入验证码"
+                  :disabled="disabled || isLoading"
+                  size="large"
+                  style="flex: 1"
+                >
+                  <template #prefix>
+                    <CheckCircle2 class="w-4 h-4 text-muted-foreground" />
+                  </template>
+                </a-input>
+                <img
+                  v-if="captchaUrl"
+                  :src="captchaUrl"
+                  alt="验证码"
+                  class="h-9 w-24 object-cover rounded-md cursor-pointer"
+                  :style="{ borderRadius: `calc(var(--radius))` }"
+                  @click="refreshCaptcha"
+                >
+                <button
+                  v-else
+                  class="h-9 w-24 flex items-center justify-center rounded-md border border-border bg-muted text-sm text-muted-foreground hover:bg-muted/80 transition-colors"
+                  :style="{ borderRadius: `calc(var(--radius))` }"
+                  :disabled="disabled || isLoading"
+                  @click="refreshCaptcha"
+                >
+                  获取验证码
+                </button>
+              </div>
+            </template>
+          </TForm>
         </div>
 
         <!-- 记住我和忘记密码 -->
@@ -348,8 +420,8 @@ const features = [
         </Button>
 
         <!-- 演示账户 -->
-        <div
-          class="p-4 bg-muted/50 border border-border/50 animate-fade-in-up animation-delay-3 hidden"
+        <!-- <div
+          class="p-4 bg-muted/50 border border-border/50 animate-fade-in-up animation-delay-3"
           :style="{ borderRadius: `calc(var(--radius) * 1.5)` }"
         >
           <div class="flex items-center gap-2 mb-2">
@@ -361,7 +433,7 @@ const features = [
             <br>
             密码: <span class="text-foreground font-medium">admin123</span>
           </p>
-        </div>
+        </div> -->
       </div>
     </div>
   </div>

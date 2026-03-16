@@ -108,7 +108,7 @@ export default {
     themeDesc: 'Toggle light/dark theme',
     language: 'Language',
     logoutDesc: 'Securely sign out',
-    userMenuFooter: 'TabTab Admin · Made Simple',
+    userMenuFooter: 'WINROAD WOS · Made Simple',
     adminRole: 'Admin',
     userRole: 'User',
   },

@@ -1,6 +1,6 @@
 <div align="center">
 
-# TabTab Admin
+# WINROAD WOS
 
 <p align="center">
   <img src="https://img.shields.io/badge/Vue-3.5+-4FC08D?style=flat-square&logo=vue.js&logoColor=white" alt="Vue 3" />
@@ -453,4 +453,4 @@ const userInfo = await authApi.getUserInfo()
 
 ## 📄 许可证
 
-[MIT](LICENSE) © TabTab Admin
+[MIT](LICENSE) © WINROAD WOS
