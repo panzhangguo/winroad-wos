@@ -100,9 +100,9 @@ export const presetThemes: Record<string, PresetTheme> = Object.fromEntries(
 
 const baseLayoutConfig: LayoutConfig = {
   sidebarWidth: 280,
-  sidebarCollapsedWidth: 72,
+  sidebarCollapsedWidth: 4.25,
   sidebarCollapsed: false,
-  headerHeight: 56,
+  headerHeight: 3.5,
   radius: 0.625,
   fontSize: 16,
   animations: true,
@@ -176,8 +176,8 @@ export const useThemeStore = defineStore(
 
       root.style.setProperty('--radius', `${config.radius}rem`)
       root.style.setProperty('--sidebar-width', `${config.sidebarWidth}px`)
-      root.style.setProperty('--sidebar-collapsed-width', `${config.sidebarCollapsedWidth}px`)
-      root.style.setProperty('--header-height', `${config.headerHeight}px`)
+      root.style.setProperty('--sidebar-collapsed-width', `${config.sidebarCollapsedWidth}rem`)
+      root.style.setProperty('--header-height', `${config.headerHeight}rem`)
       root.style.setProperty('--font-size-base', `${config.fontSize}px`)
 
       root.classList.toggle('reduce-motion', !config.animations)

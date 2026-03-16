@@ -47,7 +47,7 @@ const userInfo = computed(() => ({
   account: authStore.user?.userAccount || 'user@example.com',
   avatar: authStore.user?.headIcon,
   role: authStore.user?.isAdministrator === true ? 'admin' : 'user',
-  roleName: authStore.user.roleName.split(',')[0],
+  roleName: authStore.user?.roleName?.split(',')?.[0] || 'user',
 }))
 
 /**

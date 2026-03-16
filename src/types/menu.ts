@@ -98,6 +98,8 @@ export interface SidebarMenuItem {
   path: string
   /** 图标名称 */
   icon?: string
+  /** 是否在菜单中隐藏 */
+  hidden?: boolean
   /** 子菜单 */
   children?: SidebarMenuItem[]
   /** 是否禁用 */

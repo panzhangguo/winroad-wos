@@ -4,7 +4,7 @@
  */
 import { delay, http, HttpResponse } from 'msw'
 
-const routeData = [
+export const routeData = [
   {
     path: '/dashboard',
     name: 'dashboard',

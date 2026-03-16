@@ -216,7 +216,7 @@ watch(() => themeStore.layoutConfig.sidebarWidth, (newWidth) => {
       :default-size="panelSize"
       class="flex flex-col border-r border-border/30 bg-background/80 backdrop-blur-xl supports-[backdrop-filter]:bg-background/70 relative"
       :class="{ 'transition-none': isDragging }"
-      :style="collapsed ? { flex: `0 0 ${collapsedWidth}px` } : {}"
+      :style="collapsed ? { flex: `0 0 ${collapsedWidth}rem` } : {}"
       @resize="(size: number) => $emit('resize', size)"
     >
       <!-- 菜单区域背景装饰 -->
@@ -418,7 +418,7 @@ watch(() => themeStore.layoutConfig.sidebarWidth, (newWidth) => {
                         {{ t('common.sidebar.signedInAs') }}
                       </p>
                       <p class="text-sm font-semibold truncate">
-                        {{ authStore.user?.email || 'user@example.com' }}
+                        {{ authStore.user?.userAccount || 'user@example.com' }}
                       </p>
                     </div>
                     <DropdownMenuSeparator />

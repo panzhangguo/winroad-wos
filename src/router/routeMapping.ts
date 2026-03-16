@@ -55,7 +55,7 @@ function initComponentMap() {
   layoutCache.set('blanklayout', () => import('@/layouts/BlankLayout.vue'))
 
   if (import.meta.env.DEV) {
-    console.warn('[RouteMapping] 已加载组件:', Array.from(componentCache.keys()))
+    console.warn('[RouteMapping] 已加载组件:', [...componentCache.keys()])
   }
 }
 

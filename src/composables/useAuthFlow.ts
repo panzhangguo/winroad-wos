@@ -49,13 +49,13 @@ export function useAuthFlow() {
         return { success: false, error: '获取用户信息失败，请稍后重试' }
       }
 
-      // // 登录成功后获取菜单
-      // const menuSuccess = await menuStore.fetchMenus()
-      // if (!menuSuccess) {
-      //   // 菜单获取失败，执行登出清理
-      //   await authStore.logout()
-      //   return { success: false, error: '获取菜单失败，请稍后重试' }
-      // }
+      // 登录成功后获取菜单
+      const menuSuccess = await menuStore.fetchMenus()
+      if (!menuSuccess) {
+        // 菜单获取失败，执行登出清理
+        await authStore.logout()
+        return { success: false, error: '获取菜单失败，请稍后重试' }
+      }
 
       return { success: true }
     }

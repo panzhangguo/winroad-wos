@@ -4,10 +4,9 @@ import type { MenuItem, RouteConfig } from '@/types/menu'
  * @description 使用 Pinia 管理菜单状态和动态路由
  */
 import { acceptHMRUpdate, defineStore } from 'pinia'
-import { menuApi } from '@/api'
+// import { menuApi } from '@/api'
 import router from '@/router'
 import { convertToRouteRecords } from '@/router/routeMapping'
-
 /**
  * 从路由配置生成菜单数据
  * 提取需要展示在侧边栏的菜单项
@@ -130,7 +129,8 @@ export const useMenuStore = defineStore(
         isLoading.value = true
         try {
           console.warn('[MenuStore] Fetching menus...')
-          const routeConfigs = await menuApi.getUserMenus() as RouteConfig[]
+          // const routeConfigs = await menuApi.getUserMenus() as RouteConfig[]
+          const routeConfigs = await (async () => import('@/mocks/handlers/menu').then(module => module.routeData as RouteConfig[]))()
           console.warn('[MenuStore] Response:', routeConfigs)
 
           routes.value = routeConfigs
