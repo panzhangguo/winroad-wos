@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import type { FormSchema, TableCellSlotProps, TableSchema, TTableExpose } from '@/components/business'
 
-import type { Order } from '@/types'
+import type { FlowInstance } from '@/types'
 import { Space, Tag } from 'antdv-next'
+
 import {
   CheckCircle,
   Clock,
@@ -11,19 +12,18 @@ import {
   ShoppingCart,
   XCircle,
 } from 'lucide-vue-next'
-
-import { ordersApi } from '@/api'
+import { ordersApi, serviceOrdersApi } from '@/api'
 /**
- * 订单管理页 - 使用 useMutation 重构
+ * 服务单管理页 - 使用 useMutation 重构
  *
- * @description 基于 JSON 配置化的订单管理页面
+ * @description 基于 JSON 配置化的服务单管理页面
  */
 import { TBatchActions, TDataCard, TEmptyState, TForm, TModal, TPageHeader, TStatusBadge, TTable } from '@/components/business'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useMutation, useTableData } from '@/composables'
 import { createModalFormSchema } from '@/config/formConfig'
-import { ORDER_STATUS, STATUS_CONFIG } from '@/constants'
+import { FLOW_STATUS, ORDER_STATUS, STATUS_CONFIG } from '@/constants'
 
 // ==================== 数据管理 ====================
 const {
@@ -42,27 +42,27 @@ const {
   updateData: _updateData,
   removeData: _removeData,
   batchRemoveData: _batchRemoveData,
-} = useTableData<Order>({
+} = useTableData<FlowInstance>({
   // API 调用函数
   apiCall: async (params) => {
-    const res = await ordersApi.getOrders(params)
-    return res || { list: [], total: 0, page: 1, pageSize: 10 }
+    const res = await serviceOrdersApi.getOrders(params)
+    return res || { list: [], pagination: { total: 0, currentPage: 1, pageSize: 10 } }
   },
   // 构建 API 请求参数
   apiCallParams: ctx => ({
-    page: ctx.page,
+    currentPage: ctx.currentPage,
     pageSize: ctx.pageSize,
     search: ctx.searchQuery,
     status: ctx.filters.status,
   }),
+
   // 统计数据计算
   statisticsFn: (items) => {
     const total = items.length
-    const pending = items.filter(o => o.status === ORDER_STATUS.PENDING).length
-    const processing = items.filter(o => o.status === ORDER_STATUS.PROCESSING).length
-    const completed = items.filter(o => o.status === ORDER_STATUS.COMPLETED).length
-    const cancelled = items.filter(o => o.status === ORDER_STATUS.CANCELLED).length
-    const totalAmount = items.reduce((sum, o) => sum + (o.total || 0), 0)
+    const pending = items.filter(o => o.status === FLOW_STATUS.PENDING).length
+    const processing = items.filter(o => o.status === FLOW_STATUS.WAITING).length
+    const completed = items.filter(o => o.status === FLOW_STATUS.COMPLETED).length
+    const cancelled = items.filter(o => o.status === FLOW_STATUS.CANCELLED).length
 
     return {
       total,
@@ -70,7 +70,6 @@ const {
       processing,
       completed,
       cancelled,
-      totalAmount,
     }
   },
 })
@@ -84,7 +83,7 @@ const addFormData = ref({
   address: '',
   total: 0,
   items: 1,
-  status: ORDER_STATUS.PENDING,
+  status: FLOW_STATUS.PENDING,
   note: '',
 })
 
@@ -108,7 +107,7 @@ const { mutate: createOrder } = useMutation({
       address: '',
       total: 0,
       items: 1,
-      status: ORDER_STATUS.PENDING,
+      status: FLOW_STATUS.PENDING,
       note: '',
     }
     fetchData()
@@ -136,31 +135,31 @@ const statisticsCards = computed(() => {
   const stats = statistics.value || {}
   return [
     {
-      title: '总订单',
+      title: '总服务单',
       value: stats.total || 0,
       icon: ShoppingCart,
-      color: 'text-blue-500',
+      color: 'blue',
       bgColor: 'bg-blue-50',
     },
     {
-      title: '待处理',
+      title: '等待审核',
       value: stats.pending || 0,
       icon: Clock,
-      color: 'text-yellow-500',
+      color: 'yellow',
       bgColor: 'bg-yellow-50',
     },
     {
       title: '处理中',
       value: stats.processing || 0,
       icon: Package,
-      color: 'text-purple-500',
+      color: 'purple',
       bgColor: 'bg-purple-50',
     },
     {
       title: '已完成',
       value: stats.completed || 0,
       icon: CheckCircle,
-      color: 'text-green-500',
+      color: 'green',
       bgColor: 'bg-green-50',
     },
   ]
@@ -179,7 +178,7 @@ const searchSchema: FormSchema = {
       name: 'keyword',
       type: 'input',
       label: '',
-      placeholder: '搜索订单号、客户...',
+      placeholder: '搜索服务单号、客户...',
       className: 'w-[240px]',
     },
     {
@@ -189,10 +188,11 @@ const searchSchema: FormSchema = {
       placeholder: '全部状态',
       options: [
         { label: '全部状态', value: '' },
-        { label: STATUS_CONFIG.ORDER.PENDING.text, value: STATUS_CONFIG.ORDER.PENDING.value },
-        { label: STATUS_CONFIG.ORDER.PROCESSING.text, value: STATUS_CONFIG.ORDER.PROCESSING.value },
-        { label: STATUS_CONFIG.ORDER.COMPLETED.text, value: STATUS_CONFIG.ORDER.COMPLETED.value },
-        { label: STATUS_CONFIG.ORDER.CANCELLED.text, value: STATUS_CONFIG.ORDER.CANCELLED.value },
+        { label: STATUS_CONFIG.FLOW.PENDING.text, value: STATUS_CONFIG.FLOW.PENDING.value },
+        { label: STATUS_CONFIG.FLOW.WAITING.text, value: STATUS_CONFIG.FLOW.WAITING.value },
+        { label: STATUS_CONFIG.FLOW.COMPLETED.text, value: STATUS_CONFIG.FLOW.COMPLETED.value },
+        { label: STATUS_CONFIG.FLOW.DELIVERED.text, value: STATUS_CONFIG.FLOW.DELIVERED.value },
+        { label: STATUS_CONFIG.FLOW.CANCELLED.text, value: STATUS_CONFIG.FLOW.CANCELLED.value },
       ],
       className: 'w-[140px]',
     },
@@ -221,29 +221,31 @@ const searchSchema: FormSchema = {
 const tableSchema = computed<TableSchema>(() => ({
   columns: [
     {
-      title: '订单号',
-      dataIndex: 'orderNo',
+      title: '服务单号',
+      dataIndex: 'flowAbstract',
       width: 150,
-      slot: 'orderNo',
     },
     {
-      title: '客户信息',
-      dataIndex: 'customer',
+      title: '服务标题',
+      dataIndex: 'fullName',
       width: 180,
-      slot: 'customer',
     },
+    // {
+    //   title: '提交工单',
+    //   dataIndex: 'flowName',
+    //   width: 100,
+    // },
     {
-      title: '商品数量',
-      dataIndex: 'items',
-      width: 100,
-      align: 'center',
-    },
-    {
-      title: '订单金额',
-      dataIndex: 'total',
+      title: '提交时间',
+      dataIndex: 'startTime',
       width: 120,
-      slot: 'total',
-      sorter: true,
+      customRender: ({ text }) => {
+        return h(
+          'div',
+          { class: '' },
+          text ? new Date(+text).toLocaleString('zh-CN') : '-',
+        )
+      },
     },
     {
       title: '状态',
@@ -251,23 +253,28 @@ const tableSchema = computed<TableSchema>(() => ({
       width: 120,
       slot: 'status',
       filters: [
-        { text: STATUS_CONFIG.ORDER.PENDING.text, value: STATUS_CONFIG.ORDER.PENDING.value },
-        { text: STATUS_CONFIG.ORDER.PROCESSING.text, value: STATUS_CONFIG.ORDER.PROCESSING.value },
-        { text: STATUS_CONFIG.ORDER.COMPLETED.text, value: STATUS_CONFIG.ORDER.COMPLETED.value },
-        { text: STATUS_CONFIG.ORDER.CANCELLED.text, value: STATUS_CONFIG.ORDER.CANCELLED.value },
+        { text: STATUS_CONFIG.FLOW.PENDING.text, value: STATUS_CONFIG.FLOW.PENDING.value },
+        { text: STATUS_CONFIG.FLOW.WAITING.text, value: STATUS_CONFIG.FLOW.WAITING.value },
+        { text: STATUS_CONFIG.FLOW.COMPLETED.text, value: STATUS_CONFIG.FLOW.COMPLETED.value },
+        { text: STATUS_CONFIG.FLOW.DELIVERED.text, value: STATUS_CONFIG.FLOW.DELIVERED.value },
+        { text: STATUS_CONFIG.FLOW.CANCELLED.text, value: STATUS_CONFIG.FLOW.CANCELLED.value },
       ],
     },
     {
-      title: '下单日期',
-      dataIndex: 'date',
+      title: '审批节点',
+      dataIndex: 'thisStep',
       width: 120,
-      sorter: true,
     },
     {
-      title: '收货地址',
-      dataIndex: 'address',
-      width: 200,
-      ellipsis: true,
+      title: '紧急程度',
+      dataIndex: 'flowUrgent',
+      width: 120,
+    },
+    {
+      title: '处理进度',
+      dataIndex: 'completion',
+      slot: 'completion',
+      width: 120,
     },
   ],
   pagination: {
@@ -280,18 +287,19 @@ const tableSchema = computed<TableSchema>(() => ({
     type: 'checkbox',
     show: true,
   },
+  bordered: true,
   actions: [
     {
       text: '查看',
       type: 'primary',
-      onClick: record => handleViewOrder(record as unknown as Order),
+      onClick: record => handleViewOrder(record as unknown as FlowInstance),
     },
     {
       text: '删除',
       type: 'danger',
       confirm: true,
-      confirmText: '确定要删除该订单吗？此操作不可恢复。',
-      onClick: record => handleDeleteOrder((record as unknown as Order).id),
+      confirmText: '确定要删除该服务单吗？此操作不可恢复。',
+      onClick: record => handleDeleteOrder((record as unknown as FlowInstance).id),
     },
   ],
   actionWidth: 150,
@@ -308,7 +316,7 @@ const tableData = computed(() => {
 
 // ==================== 新增/查看表单 ====================
 const isViewDialogOpen = ref(false)
-const viewingOrder = ref<Order | null>(null)
+const viewingOrder = ref<FlowInstance | null>(null)
 
 // ==================== 新增表单 Schema ====================
 const addSchema = createModalFormSchema({
@@ -347,9 +355,9 @@ const addSchema = createModalFormSchema({
     {
       name: 'total',
       type: 'number',
-      label: '订单金额',
-      placeholder: '请输入订单金额',
-      rules: [{ required: true, message: '订单金额不能为空' }],
+      label: '服务单金额',
+      placeholder: '请输入服务单金额',
+      rules: [{ required: true, message: '服务单金额不能为空' }],
     },
     {
       name: 'items',
@@ -361,16 +369,16 @@ const addSchema = createModalFormSchema({
     {
       name: 'status',
       type: 'select',
-      label: '订单状态',
+      label: '服务单状态',
       placeholder: '请选择状态',
       options: [
-        { label: STATUS_CONFIG.ORDER.PENDING.text, value: STATUS_CONFIG.ORDER.PENDING.value },
-        { label: STATUS_CONFIG.ORDER.PROCESSING.text, value: STATUS_CONFIG.ORDER.PROCESSING.value },
-        { label: STATUS_CONFIG.ORDER.SHIPPED.text, value: STATUS_CONFIG.ORDER.SHIPPED.value },
-        { label: STATUS_CONFIG.ORDER.DELIVERED.text, value: STATUS_CONFIG.ORDER.DELIVERED.value },
-        { label: STATUS_CONFIG.ORDER.CANCELLED.text, value: STATUS_CONFIG.ORDER.CANCELLED.value },
+        { label: STATUS_CONFIG.FLOW.PENDING.text, value: STATUS_CONFIG.FLOW.PENDING.value },
+        { label: STATUS_CONFIG.FLOW.WAITING.text, value: STATUS_CONFIG.FLOW.WAITING.value },
+        { label: STATUS_CONFIG.FLOW.COMPLETED.text, value: STATUS_CONFIG.FLOW.COMPLETED.value },
+        { label: STATUS_CONFIG.FLOW.DELIVERED.text, value: STATUS_CONFIG.FLOW.DELIVERED.value },
+        { label: STATUS_CONFIG.FLOW.CANCELLED.text, value: STATUS_CONFIG.FLOW.CANCELLED.value },
       ],
-      rules: [{ required: true, message: '请选择订单状态' }],
+      rules: [{ required: true, message: '请选择服务单状态' }],
     },
     {
       name: 'remark',
@@ -380,7 +388,7 @@ const addSchema = createModalFormSchema({
     },
   ],
   actions: {
-    submitText: '创建订单',
+    submitText: '创建服务单',
     resetText: '取消',
     onReset: () => {
       isAddDialogOpen.value = false
@@ -390,7 +398,7 @@ const addSchema = createModalFormSchema({
 
 // ==================== 事件处理 ====================
 
-function handleViewOrder(order: Order): void {
+function handleViewOrder(order: FlowInstance): void {
   viewingOrder.value = order
   isViewDialogOpen.value = true
 }
@@ -404,11 +412,11 @@ function handleDeleteOrder(id: string): void {
 }
 
 const selectedRowKeys = ref<(string | number)[]>([])
-const selectedRows = ref<Order[]>([])
+const selectedRows = ref<FlowInstance[]>([])
 
 function handleSelectChange(keys: (string | number)[], rows: any[]): void {
   selectedRowKeys.value = keys
-  selectedRows.value = rows as Order[]
+  selectedRows.value = rows as FlowInstance[]
 }
 
 function handleClearSelection(): void {
@@ -419,10 +427,10 @@ function handleClearSelection(): void {
 
 function handleBatchDelete(): void {
   if (selectedRowKeys.value.length === 0) {
-    alert('请先选择要删除的订单')
+    alert('请先选择要删除的服务单')
     return
   }
-  if (confirm(`确定要删除选中的 ${selectedRowKeys.value.length} 个订单吗？`)) {
+  if (confirm(`确定要删除选中的 ${selectedRowKeys.value.length} 个服务单吗？`)) {
     batchDeleteOrders(selectedRowKeys.value.map(String))
   }
 }
@@ -446,17 +454,17 @@ function handleTableChange(pagination: any): void {
   <div class="space-y-6">
     <!-- 页面标题 -->
     <TPageHeader
-      title="订单管理"
-      subtitle="查看和管理所有订单"
+      title="服务单管理"
+      subtitle="查看和管理我的所有服务单"
       :actions="[
-        { text: '创建订单', type: 'primary', iconName: 'Plus', onClick: () => isAddDialogOpen = true },
+        { text: '创建服务单', type: 'primary', iconName: 'Plus', onClick: () => isAddDialogOpen = true },
       ]"
     />
 
-    <!-- 新增订单弹窗 -->
+    <!-- 新增服务单弹窗 -->
     <TModal
       v-model:open="isAddDialogOpen"
-      title="创建新订单"
+      title="创建新服务单"
       width="560"
       :footer="null"
     >
@@ -485,13 +493,13 @@ function handleTableChange(pagination: any): void {
       <TForm v-model="searchFormData" :schema="searchSchema" />
     </div>
 
-    <!-- 订单表格 -->
+    <!-- 服务单表格 -->
     <Card class="bg-muted/40 border border-border/50 rounded-xl">
       <CardHeader>
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-3">
             <CardTitle class="text-base font-semibold">
-              订单列表
+              服务单列表
             </CardTitle>
             <span class="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
               共 {{ tableData.length }} 单
@@ -500,14 +508,14 @@ function handleTableChange(pagination: any): void {
           <div class="flex items-center gap-4">
             <TBatchActions
               :count="selectedRowKeys.length"
-              item-name="订单"
+              item-name="服务单"
               class-name="border-0 bg-transparent shadow-none px-0 py-0"
               :actions="[
                 {
                   text: '批量删除',
                   type: 'danger',
                   confirm: true,
-                  confirmText: '确定要删除选中的订单吗？此操作不可恢复。',
+                  confirmText: '确定要删除选中的服务单吗？此操作不可恢复。',
                   onClick: handleBatchDelete,
                 },
               ]"
@@ -528,155 +536,38 @@ function handleTableChange(pagination: any): void {
           @select-change="handleSelectChange"
           @change="handleTableChange"
         >
-          <!-- 自定义订单号列 -->
-          <template #orderNo="slotProps">
-            <span class="font-mono font-medium">{{ (slotProps as TableCellSlotProps).text }}</span>
-          </template>
-
-          <!-- 自定义客户列 -->
-          <template #customer="slotProps">
-            <Space direction="vertical" size="small">
-              <span class="font-medium">{{ (slotProps as TableCellSlotProps).record.customer }}</span>
-              <span class="text-xs text-muted-foreground">{{ (slotProps as TableCellSlotProps).record.phone }}</span>
-            </Space>
-          </template>
-
-          <!-- 自定义金额列 -->
-          <template #total="slotProps">
-            <span class="font-medium text-primary">¥{{ Number((slotProps as TableCellSlotProps).text).toFixed(2) }}</span>
-          </template>
-
           <!-- 自定义状态列 -->
           <template #status="slotProps">
             <TStatusBadge
               :status="(slotProps as TableCellSlotProps).text"
               :status-map="{
-                [ORDER_STATUS.PENDING]: { text: '待处理', color: 'pending' },
-                [ORDER_STATUS.PROCESSING]: { text: '处理中', color: 'processing' },
-                [ORDER_STATUS.COMPLETED]: { text: '已完成', color: 'success' },
-                [ORDER_STATUS.CANCELLED]: { text: '已取消', color: 'error' },
+                [FLOW_STATUS.PENDING]: STATUS_CONFIG.FLOW.PENDING,
+                [FLOW_STATUS.WAITING]: STATUS_CONFIG.FLOW.WAITING,
+                [FLOW_STATUS.COMPLETED]: STATUS_CONFIG.FLOW.COMPLETED,
+                [FLOW_STATUS.DELIVERED]: STATUS_CONFIG.FLOW.DELIVERED,
+                [FLOW_STATUS.CANCELLED]: STATUS_CONFIG.FLOW.CANCELLED,
               }"
             />
+          </template>
+
+          <!-- 审批进度 -->
+          <template #completion="slotProps">
+            <a-progress :percent="(slotProps as TableCellSlotProps).text" />
           </template>
 
           <!-- 空状态 -->
           <template #emptyText>
             <TEmptyState
               type="data"
-              title="暂无订单数据"
-              description="开始创建您的第一个订单吧"
-              :action="{ text: '创建订单', type: 'primary', iconName: 'Plus', onClick: () => isAddDialogOpen = true }"
+              title="暂无服务单数据"
+              description="开始创建您的第一个服务单吧"
+              :action="{ text: '创建服务单', type: 'primary', iconName: 'Plus', onClick: () => isAddDialogOpen = true }"
             />
           </template>
         </TTable>
       </CardContent>
     </Card>
 
-    <!-- 查看订单弹窗 -->
-    <TModal
-      v-model:open="isViewDialogOpen"
-      title="订单详情"
-      width="560"
-      :footer="null"
-    >
-      <div v-if="viewingOrder" class="space-y-6">
-        <!-- 订单基本信息 -->
-        <div class="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
-          <div>
-            <p class="text-sm text-muted-foreground">
-              订单号
-            </p>
-            <p class="font-mono font-medium">
-              {{ viewingOrder.orderNo }}
-            </p>
-          </div>
-          <Tag :color="(viewingOrder.status === ORDER_STATUS.PENDING ? 'warning' : viewingOrder.status === ORDER_STATUS.PROCESSING ? 'processing' : viewingOrder.status === ORDER_STATUS.COMPLETED ? 'success' : 'error')">
-            <Space>
-              <component :is="(viewingOrder.status === ORDER_STATUS.PENDING ? Clock : viewingOrder.status === ORDER_STATUS.PROCESSING ? Package : viewingOrder.status === ORDER_STATUS.COMPLETED ? CheckCircle : XCircle)" class="h-3 w-3" />
-              {{ STATUS_CONFIG.ORDER[viewingOrder.status as keyof typeof STATUS_CONFIG.ORDER]?.text || viewingOrder.status }}
-            </Space>
-          </Tag>
-        </div>
-
-        <!-- 客户信息 -->
-        <div class="space-y-3">
-          <h4 class="font-medium">
-            客户信息
-          </h4>
-          <div class="grid grid-cols-2 gap-4 text-sm">
-            <div>
-              <p class="text-muted-foreground">
-                姓名
-              </p>
-              <p>{{ viewingOrder.customer }}</p>
-            </div>
-            <div>
-              <p class="text-muted-foreground">
-                电话
-              </p>
-              <p>{{ viewingOrder.phone }}</p>
-            </div>
-            <div class="col-span-2">
-              <p class="text-muted-foreground">
-                邮箱
-              </p>
-              <p>{{ viewingOrder.email }}</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- 订单信息 -->
-        <div class="space-y-3">
-          <h4 class="font-medium">
-            订单信息
-          </h4>
-          <div class="grid grid-cols-2 gap-4 text-sm">
-            <div>
-              <p class="text-muted-foreground">
-                商品数量
-              </p>
-              <p>{{ viewingOrder.items }} 件</p>
-            </div>
-            <div>
-              <p class="text-muted-foreground">
-                订单金额
-              </p>
-              <p class="font-medium text-primary">
-                ¥{{ viewingOrder.total.toFixed(2) }}
-              </p>
-            </div>
-            <div>
-              <p class="text-muted-foreground">
-                下单日期
-              </p>
-              <p>{{ viewingOrder.date }}</p>
-            </div>
-            <div class="col-span-2">
-              <p class="text-muted-foreground">
-                收货地址
-              </p>
-              <p>{{ viewingOrder.address }}</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- 备注 -->
-        <div v-if="viewingOrder.note" class="space-y-3">
-          <h4 class="font-medium">
-            备注
-          </h4>
-          <p class="text-sm text-muted-foreground p-3 bg-muted/50 rounded-lg">
-            {{ viewingOrder.note }}
-          </p>
-        </div>
-
-        <!-- 操作按钮 -->
-        <div class="flex justify-end gap-2 pt-4 border-t">
-          <Button variant="outline" @click="isViewDialogOpen = false">
-            关闭
-          </Button>
-        </div>
-      </div>
-    </TModal>
+    <!-- 查看服务单弹窗 -->
   </div>
 </template>

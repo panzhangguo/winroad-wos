@@ -11,7 +11,6 @@ import {
   Tag,
 } from 'lucide-vue-next'
 import { categoriesApi } from '@/api'
-import { createModalFormSchema } from '@/config/formConfig'
 import { TForm } from '@/components/business/TForm'
 import { TModal } from '@/components/business/TModal'
 /**
@@ -22,6 +21,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useTableData } from '@/composables'
+import { createModalFormSchema } from '@/config/formConfig'
 import { CATEGORY_STATUS } from '@/constants'
 
 const {

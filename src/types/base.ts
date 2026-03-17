@@ -21,9 +21,11 @@ export interface PaginationParams {
 /** 分页数据基础类型 */
 export interface PaginationData<T> {
   list: T[]
-  total: number
-  page: number
-  pageSize: number
+  pagination: {
+    total: number
+    currentPage: number
+    pageSize: number
+  }
 }
 
 /** 基础模型接口 */

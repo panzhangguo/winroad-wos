@@ -11,7 +11,7 @@ import { normalizeError } from '@/utils/errorHandler'
  * API 调用参数上下文
  */
 export interface ApiCallParamsContext {
-  page: number
+  currentPage: number
   pageSize: number
   searchQuery: string
   filters: Record<string, any>
@@ -145,13 +145,13 @@ export function useTableData<T = any>(options: UseTableDataOptions<T>) {
     // 构建请求参数
     const params = apiCallParams
       ? apiCallParams({
-          page: currentPage.value,
+          currentPage: currentPage.value,
           pageSize: pageSize.value,
           searchQuery: searchQuery.value,
           filters: filters.value,
         })
       : {
-          page: currentPage.value,
+          currentPage: currentPage.value,
           pageSize: pageSize.value,
         }
 

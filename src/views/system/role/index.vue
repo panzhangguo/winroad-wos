@@ -4,7 +4,6 @@ import { Badge, Switch, Tag, Tooltip } from 'antdv-next'
 import { Check, Key, Shield, Users } from 'lucide-vue-next'
 import { nextTick } from 'vue'
 import { roleApi } from '@/api'
-import { createModalFormSchema } from '@/config/formConfig'
 /**
  * 角色管理页面
  * @description 管理系统角色和权限分配
@@ -13,6 +12,7 @@ import { TBatchActions, TDataCard, TDrawer, TEmptyState, TForm, TModal, TPageHea
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useMutation, useTableData } from '@/composables'
+import { createModalFormSchema } from '@/config/formConfig'
 
 // ==================== 类型定义 ====================
 interface Role {

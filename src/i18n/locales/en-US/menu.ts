@@ -18,6 +18,11 @@ export default {
   systemMenu: 'Menu Management',
   systemOrganization: 'Organization',
 
+  // Service Order Submenu
+  serviceOrders: 'Service Orders',
+  serviceOrderList: 'My Service Orders',
+  serviceOrderAdd: 'Add Service Order',
+
   // Product Submenu
   productList: 'Product List',
   categories: 'Categories',

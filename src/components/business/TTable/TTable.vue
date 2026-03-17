@@ -3,16 +3,19 @@ import type {
   ResponsiveConfig,
   SortOrder,
   TableCellSlotProps,
+  TableColumn,
   TableFilters,
   TableHeaderSlotProps,
   TablePagination,
   TableRecord,
   TableSize,
+  TableSorter,
   TableToolbarConfig,
   TTableExpose,
   TTableProps,
 } from './types'
 import { ConfigProvider, Tooltip } from 'antdv-next'
+import { Columns3, Maximize2, Minimize2, RefreshCw, Settings2 } from 'lucide-vue-next'
 /**
  * TTable - 基于 antdv-next 的 JSON 配置化表格组件
  *
@@ -20,10 +23,6 @@ import { ConfigProvider, Tooltip } from 'antdv-next'
  */
 import { computed, ref, shallowRef, useSlots, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { Columns3, Maximize2, Minimize2, RefreshCw, Settings2 } from 'lucide-vue-next'
-import { useResponsive } from '@/composables/useResponsive'
-import { useTableColumns } from '@/composables/useTableColumns'
-import { getAntdvLocale } from '@/i18n/locales'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -37,6 +36,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { useResponsive } from '@/composables/useResponsive'
+import { useTableColumns } from '@/composables/useTableColumns'
+import { getAntdvLocale } from '@/i18n/locales'
 import { cn } from '@/lib/utils'
 import { useTTableTheme } from './theme'
 
@@ -154,7 +156,7 @@ const state = ref({
 const tableSize = ref<TableSize>('middle')
 const isFullscreen = ref(false)
 const isRefreshing = ref(false)
-const columnSettingsVisible = ref(false)
+// const columnSettingsVisible = ref(false)
 const visibleColumnKeys = ref<(string | number)[]>([])
 
 /**
@@ -731,232 +733,232 @@ watch(
         class="t-table"
         @change="handleChange"
       >
-      <!-- 标题插槽 - 包含标题和工具栏 -->
-      <template v-if="schema.title || slots.title || schema.showTotalBadge || toolbarConfig.enabled" #title>
-        <div class="flex items-center justify-between gap-4">
-          <div class="flex items-center gap-3 min-w-0">
-            <slot name="title" :data="tableData">
-              <template v-if="typeof schema.title === 'function'">
-                {{ schema.title(tableData) }}
-              </template>
-              <template v-else-if="schema.title">
-                {{ schema.title }}
-              </template>
-            </slot>
-            <!-- 总数徽章 -->
-            <span
-              v-if="schema.showTotalBadge"
-              class="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full whitespace-nowrap"
-            >
-              {{ t('common.total', { total: tableData.length }) }}
-            </span>
-          </div>
-          
-          <!-- 工具栏 -->
-          <div v-if="toolbarConfig.enabled" class="t-table-toolbar">
-            <!-- 刷新按钮 -->
-            <Tooltip v-if="toolbarConfig.showRefresh" :title="toolbarConfig.refreshText || t('common.refresh')">
-              <button
-                type="button"
-                class="t-table-toolbar-btn"
-                :class="{ 'animate-spin': isRefreshing }"
-                :disabled="isRefreshing"
-                @click="handleRefresh"
+        <!-- 标题插槽 - 包含标题和工具栏 -->
+        <template v-if="schema.title || slots.title || schema.showTotalBadge || toolbarConfig.enabled" #title>
+          <div class="flex items-center justify-between gap-4">
+            <div class="flex items-center gap-3 min-w-0">
+              <slot name="title" :data="tableData">
+                <template v-if="typeof schema.title === 'function'">
+                  {{ schema.title(tableData) }}
+                </template>
+                <template v-else-if="schema.title">
+                  {{ schema.title }}
+                </template>
+              </slot>
+              <!-- 总数徽章 -->
+              <span
+                v-if="schema.showTotalBadge"
+                class="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full whitespace-nowrap"
               >
-                <RefreshCw class="w-4 h-4" />
-              </button>
-            </Tooltip>
+                {{ t('common.total', { total: tableData.length }) }}
+              </span>
+            </div>
 
-            <!-- 密度切换 -->
-            <DropdownMenu v-if="toolbarConfig.showDensity">
-              <DropdownMenuTrigger as-child>
-                <button type="button" class="t-table-toolbar-btn" :title="t('common.density')">
-                  <Settings2 class="w-4 h-4" />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" class="w-32">
-                <DropdownMenuItem
-                  v-for="opt in densityOptions"
-                  :key="opt.value"
-                  :class="tableSize === opt.value && 'bg-accent'"
-                  @click="handleDensityChange(opt.value)"
+            <!-- 工具栏 -->
+            <div v-if="toolbarConfig.enabled" class="t-table-toolbar">
+              <!-- 刷新按钮 -->
+              <Tooltip v-if="toolbarConfig.showRefresh" :title="toolbarConfig.refreshText || t('common.refresh')">
+                <button
+                  type="button"
+                  class="t-table-toolbar-btn"
+                  :class="{ 'animate-spin': isRefreshing }"
+                  :disabled="isRefreshing"
+                  @click="handleRefresh"
                 >
-                  {{ opt.label }}
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-
-            <!-- 列设置 -->
-            <DropdownMenu v-if="toolbarConfig.showColumnSettings">
-              <DropdownMenuTrigger as-child>
-                <button type="button" class="t-table-toolbar-btn" :title="t('common.columnSettings')">
-                  <Columns3 class="w-4 h-4" />
+                  <RefreshCw class="w-4 h-4" />
                 </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" class="w-48">
-                <div class="text-sm font-medium mb-2 px-2">
-                  {{ t('common.columnSettings') }}
-                </div>
-                <div class="space-y-1 px-1">
-                  <label
-                    v-for="col in schema.columns.filter(c => c.dataIndex || c.key)"
-                    :key="col.key || col.dataIndex"
-                    class="t-table-column-item"
-                  >
-                    <input
-                      type="checkbox"
-                      :checked="visibleColumnKeys.includes(col.key || col.dataIndex as string)"
-                      @change="(e: Event) => {
-                        const key = col.key || col.dataIndex as string
-                        const checked = (e.target as HTMLInputElement).checked
-                        toggleColumnVisibility(key, checked)
-                      }"
-                    >
-                    <span>{{ col.title }}</span>
-                  </label>
-                </div>
-              </DropdownMenuContent>
-            </DropdownMenu>
+              </Tooltip>
 
-            <!-- 全屏切换 -->
-            <Tooltip v-if="toolbarConfig.showFullscreen" :title="t('common.fullscreen')">
-              <button type="button" class="t-table-toolbar-btn" @click="handleFullscreenToggle">
-                <Maximize2 class="w-4 h-4" />
-              </button>
-            </Tooltip>
-
-            <!-- 自定义按钮 -->
-            <template v-if="toolbarConfig.customActions?.length">
-              <div class="w-px h-4 bg-border mx-1" />
-              <template v-for="action in toolbarConfig.customActions" :key="action.key">
-                <Tooltip v-if="action.show !== false" :title="action.tooltip || action.text">
-                  <button
-                    type="button"
-                    class="t-table-toolbar-btn"
-                    :disabled="action.disabled"
-                    @click="action.onClick"
-                  >
-                    <component
-                      :is="typeof action.icon === 'string' ? null : action.icon"
-                      v-if="action.icon && typeof action.icon !== 'string'"
-                      class="w-4 h-4"
-                    />
-                    <span v-if="action.text">{{ action.text }}</span>
+              <!-- 密度切换 -->
+              <DropdownMenu v-if="toolbarConfig.showDensity">
+                <DropdownMenuTrigger as-child>
+                  <button type="button" class="t-table-toolbar-btn" :title="t('common.density')">
+                    <Settings2 class="w-4 h-4" />
                   </button>
-                </Tooltip>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" class="w-32">
+                  <DropdownMenuItem
+                    v-for="opt in densityOptions"
+                    :key="opt.value"
+                    :class="tableSize === opt.value && 'bg-accent'"
+                    @click="handleDensityChange(opt.value)"
+                  >
+                    {{ opt.label }}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              <!-- 列设置 -->
+              <DropdownMenu v-if="toolbarConfig.showColumnSettings">
+                <DropdownMenuTrigger as-child>
+                  <button type="button" class="t-table-toolbar-btn" :title="t('common.columnSettings')">
+                    <Columns3 class="w-4 h-4" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" class="w-48">
+                  <div class="text-sm font-medium mb-2 px-2">
+                    {{ t('common.columnSettings') }}
+                  </div>
+                  <div class="space-y-1 px-1">
+                    <label
+                      v-for="col in schema.columns.filter(c => c.dataIndex || c.key)"
+                      :key="col.key || col.dataIndex"
+                      class="t-table-column-item"
+                    >
+                      <input
+                        type="checkbox"
+                        :checked="visibleColumnKeys.includes(col.key || col.dataIndex as string)"
+                        @change="(e: Event) => {
+                          const key = col.key || col.dataIndex as string
+                          const checked = (e.target as HTMLInputElement).checked
+                          toggleColumnVisibility(key, checked)
+                        }"
+                      >
+                      <span>{{ col.title }}</span>
+                    </label>
+                  </div>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              <!-- 全屏切换 -->
+              <Tooltip v-if="toolbarConfig.showFullscreen" :title="t('common.fullscreen')">
+                <button type="button" class="t-table-toolbar-btn" @click="handleFullscreenToggle">
+                  <Maximize2 class="w-4 h-4" />
+                </button>
+              </Tooltip>
+
+              <!-- 自定义按钮 -->
+              <template v-if="toolbarConfig.customActions?.length">
+                <div class="w-px h-4 bg-border mx-1" />
+                <template v-for="action in toolbarConfig.customActions" :key="action.key">
+                  <Tooltip v-if="action.show !== false" :title="action.tooltip || action.text">
+                    <button
+                      type="button"
+                      class="t-table-toolbar-btn"
+                      :disabled="action.disabled"
+                      @click="action.onClick"
+                    >
+                      <component
+                        :is="typeof action.icon === 'string' ? null : action.icon"
+                        v-if="action.icon && typeof action.icon !== 'string'"
+                        class="w-4 h-4"
+                      />
+                      <span v-if="action.text">{{ action.text }}</span>
+                    </button>
+                  </Tooltip>
+                </template>
               </template>
+            </div>
+          </div>
+        </template>
+
+        <!-- 尾部插槽 -->
+        <template v-if="schema.footer || slots.footer" #footer>
+          <slot name="footer" :data="tableData">
+            <template v-if="typeof schema.footer === 'function'">
+              {{ schema.footer(tableData) }}
             </template>
-          </div>
-        </div>
-      </template>
+            <template v-else>
+              {{ schema.footer }}
+            </template>
+          </slot>
+        </template>
 
-      <!-- 尾部插槽 -->
-      <template v-if="schema.footer || slots.footer" #footer>
-        <slot name="footer" :data="tableData">
-          <template v-if="typeof schema.footer === 'function'">
-            {{ schema.footer(tableData) }}
-          </template>
-          <template v-else>
-            {{ schema.footer }}
-          </template>
-        </slot>
-      </template>
+        <!-- 汇总行插槽 -->
+        <template v-if="schema.summary?.slot || slots.summary || schema.summary?.render" #summary>
+          <slot name="summary" :data="tableData">
+            <template v-if="schema.summary?.render">
+              {{ schema.summary.render(tableData) }}
+            </template>
+          </slot>
+        </template>
 
-      <!-- 汇总行插槽 -->
-      <template v-if="schema.summary?.slot || slots.summary || schema.summary?.render" #summary>
-        <slot name="summary" :data="tableData">
-          <template v-if="schema.summary?.render">
-            {{ schema.summary.render(tableData) }}
-          </template>
-        </slot>
-      </template>
+        <!-- 空状态插槽 -->
+        <template v-if="schema.emptySlot || slots.emptyText" #emptyText>
+          <slot name="emptyText">
+            <div class="flex flex-col items-center justify-center py-8 text-muted-foreground">
+              <svg
+                class="w-12 h-12 mb-4 text-muted-foreground/50"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="1.5"
+                  d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                />
+              </svg>
+              <p>{{ schema.emptyText || t('common.noData') }}</p>
+            </div>
+          </slot>
+        </template>
 
-      <!-- 空状态插槽 -->
-      <template v-if="schema.emptySlot || slots.emptyText" #emptyText>
-        <slot name="emptyText">
-          <div class="flex flex-col items-center justify-center py-8 text-muted-foreground">
-            <svg
-              class="w-12 h-12 mb-4 text-muted-foreground/50"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="1.5"
-                d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+        <!-- 展开行插槽 -->
+        <template
+          v-if="schema.expandable?.expandedRowSlot || slots.expandedRow"
+          #expandedRowRender="{ record, index, indent, expanded }"
+        >
+          <slot
+            name="expandedRow"
+            :record="record"
+            :index="index"
+            :indent="indent"
+            :expanded="expanded"
+          />
+        </template>
+
+        <!-- 展开图标插槽 -->
+        <template
+          v-if="slots.expandIcon"
+          #expandIcon="{ expanded, onExpand, record, expandable: expandRowConfig }"
+        >
+          <slot
+            name="expandIcon"
+            :expanded="expanded"
+            :on-expand="onExpand"
+            :record="record"
+            :expandable="expandRowConfig"
+          />
+        </template>
+
+        <!-- 自定义单元格插槽 -->
+        <template #bodyCell="{ column, text, record, index }">
+          <!-- 查找对应的列配置 -->
+          <template
+            v-for="col in schema.columns"
+            :key="col.key || col.dataIndex"
+          >
+            <template v-if="(col.key || col.dataIndex) === column.key && col.slot && slots[col.slot]">
+              <slot
+                :name="col.slot"
+                :text="text"
+                :record="record"
+                :index="index"
+                :column="col"
               />
-            </svg>
-            <p>{{ schema.emptyText || t('common.noData') }}</p>
-          </div>
-        </slot>
-      </template>
-
-      <!-- 展开行插槽 -->
-      <template
-        v-if="schema.expandable?.expandedRowSlot || slots.expandedRow"
-        #expandedRowRender="{ record, index, indent, expanded }"
-      >
-        <slot
-          name="expandedRow"
-          :record="record"
-          :index="index"
-          :indent="indent"
-          :expanded="expanded"
-        />
-      </template>
-
-      <!-- 展开图标插槽 -->
-      <template
-        v-if="slots.expandIcon"
-        #expandIcon="{ expanded, onExpand, record, expandable: expandRowConfig }"
-      >
-        <slot
-          name="expandIcon"
-          :expanded="expanded"
-          :on-expand="onExpand"
-          :record="record"
-          :expandable="expandRowConfig"
-        />
-      </template>
-
-      <!-- 自定义单元格插槽 -->
-      <template #bodyCell="{ column, text, record, index }">
-        <!-- 查找对应的列配置 -->
-        <template
-          v-for="col in schema.columns"
-          :key="col.key || col.dataIndex"
-        >
-          <template v-if="(col.key || col.dataIndex) === column.key && col.slot && slots[col.slot]">
-            <slot
-              :name="col.slot"
-              :text="text"
-              :record="record"
-              :index="index"
-              :column="col"
-            />
+            </template>
           </template>
         </template>
-      </template>
 
-      <!-- 自定义表头插槽 -->
-      <template #headerCell="{ column, text, index }">
-        <!-- 查找对应的列配置 -->
-        <template
-          v-for="col in schema.columns"
-          :key="col.key || col.dataIndex"
-        >
-          <template v-if="(col.key || col.dataIndex) === column.key && col.headerSlot && slots[col.headerSlot]">
-            <slot
-              :name="col.headerSlot"
-              :title="text"
-              :column="col"
-              :index="index"
-            />
+        <!-- 自定义表头插槽 -->
+        <template #headerCell="{ column, text, index }">
+          <!-- 查找对应的列配置 -->
+          <template
+            v-for="col in schema.columns"
+            :key="col.key || col.dataIndex"
+          >
+            <template v-if="(col.key || col.dataIndex) === column.key && col.headerSlot && slots[col.headerSlot]">
+              <slot
+                :name="col.headerSlot"
+                :title="text"
+                :column="col"
+                :index="index"
+              />
+            </template>
           </template>
         </template>
-      </template>
       </a-table>
     </div>
 

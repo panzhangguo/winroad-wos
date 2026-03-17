@@ -12,7 +12,6 @@ import {
   XCircle,
 } from 'lucide-vue-next'
 import { productsApi } from '@/api'
-import { createModalFormSchema } from '@/config/formConfig'
 /**
  * 商品管理页 - 使用 useMutation 重构
  *
@@ -21,6 +20,7 @@ import { createModalFormSchema } from '@/config/formConfig'
 import { TBatchActions, TDataCard, TEmptyState, TForm, TModal, TPageHeader, TStatusBadge, TTable } from '@/components/business'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useMutation, useTableData } from '@/composables'
+import { createModalFormSchema } from '@/config/formConfig'
 import { PRODUCT_STATUS, STATUS_CONFIG } from '@/constants'
 
 // ==================== 类型定义 ====================

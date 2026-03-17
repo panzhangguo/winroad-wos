@@ -48,26 +48,26 @@ export interface UseTableColumnsOptions {
   /**
    * 表格列配置数组
    */
-  columns: TableColumn[]
+  columns: MaybeRef<TableColumn[]>
   /**
    * 操作按钮配置数组
    */
-  actions?: TableAction[]
+  actions?: MaybeRef<TableAction[]>
   /**
    * 操作列标题
    * @default 'common.actions' (i18n key)
    */
-  actionTitle?: string
+  actionTitle?: MaybeRef<string>
   /**
    * 操作列宽度
    * @default 150
    */
-  actionWidth?: number | string
+  actionWidth?: MaybeRef<number | string>
   /**
    * 操作列固定位置
    * @default 'right'
    */
-  actionFixed?: 'left' | 'right'
+  actionFixed?: MaybeRef<'left' | 'right'>
 }
 
 /**
@@ -208,9 +208,16 @@ function transformColumn(col: TableColumn, index: number): Record<string, unknow
     }
   }
 
-  // 自定义渲染
+  // 自定义单元格渲染
   if (col.customRender) {
-    column.customRender = col.customRender
+    column.render = (value: unknown, record: TableRecord, index: number) => {
+      return col.customRender?.({
+        text: value,
+        record,
+        index,
+        column: col,
+      })
+    }
   }
 
   // 自定义表头渲染

@@ -29,6 +29,7 @@ export {
 export { categoriesApi } from './modules/categories'
 
 export { inventoryApi } from './modules/inventory'
+
 export {
   type CreateMenuParams,
   type GetMenusParams,
@@ -36,7 +37,6 @@ export {
   menuApi,
   type UpdateMenuParams,
 } from './modules/menu'
-
 export { ordersApi } from './modules/orders'
 
 export {
@@ -56,6 +56,8 @@ export {
   roleApi,
   type UpdateRoleParams,
 } from './modules/role'
+
+export { serviceOrdersApi } from './modules/services'
 export { usersApi } from './modules/users'
 
 export type {

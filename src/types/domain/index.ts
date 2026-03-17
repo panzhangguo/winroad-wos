@@ -4,6 +4,7 @@
  */
 
 export * from './category'
+export * from './flow'
 export * from './inventory'
 export * from './order'
 export * from './product'

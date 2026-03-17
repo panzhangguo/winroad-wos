@@ -111,6 +111,16 @@ export const BUTTON_VARIANT = {
   LINK: 'link',
 } as const
 
+/** 流程状态 */
+export const FLOW_STATUS = {
+  PENDING: 1, // 等待审核
+  COMPLETED: 2, // 审核通过
+  REJECTED: 3, // 审核退回
+  DELIVERED: 4, // 流程撤回
+  CANCELLED: 5, // 审核终止
+  WAITING: 6, // 等待处理
+} as const
+
 /** 状态配置映射 */
 export const STATUS_CONFIG = {
   /** 产品状态配置 */
@@ -133,5 +143,14 @@ export const STATUS_CONFIG = {
     DELIVERED: { value: ORDER_STATUS.DELIVERED, text: '已送达', color: 'success' },
     COMPLETED: { value: ORDER_STATUS.COMPLETED, text: '已完成', color: 'success' },
     CANCELLED: { value: ORDER_STATUS.CANCELLED, text: '已取消', color: 'error' },
+  },
+  /** 服务单状态配置 */
+  FLOW: {
+    PENDING: { value: FLOW_STATUS.PENDING, text: '等待审核', color: 'warning' },
+    WAITING: { value: FLOW_STATUS.WAITING, text: '等待处理', color: 'info' },
+    COMPLETED: { value: FLOW_STATUS.COMPLETED, text: '已完成', color: 'success' },
+    REJECTED: { value: FLOW_STATUS.REJECTED, text: '已拒绝', color: 'error' },
+    DELIVERED: { value: FLOW_STATUS.DELIVERED, text: '已撤回', color: 'default' },
+    CANCELLED: { value: FLOW_STATUS.CANCELLED, text: '已取消', color: 'error' },
   },
 } as const

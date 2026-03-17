@@ -18,6 +18,11 @@ export default {
   systemMenu: '菜单管理',
   systemOrganization: '组织架构',
 
+  // 服务单子菜单
+  serviceOrders: '服务单',
+  serviceOrderList: '我的服务单',
+  serviceOrderAdd: '添加服务单',
+
   // 商品子菜单
   productList: '商品列表',
   categories: '分类管理',
