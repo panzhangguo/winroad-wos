@@ -40,15 +40,15 @@ function createMethod<T>(
   url: string,
   data?: unknown,
   config?: RequestConfig,
-): Method<ApiResponse<T>> {
-  const methodMap: Record<HttpMethod, (url: string, data?: unknown, config?: RequestConfig) => Method<ApiResponse<T>>> = {
-    GET: (u, _, c) => httpClient.Get<ApiResponse<T>>(u, c),
-    POST: (u, d, c) => httpClient.Post<ApiResponse<T>>(u, d, c),
-    PUT: (u, d, c) => httpClient.Put<ApiResponse<T>>(u, d, c),
-    PATCH: (u, d, c) => httpClient.Patch<ApiResponse<T>>(u, d, c),
-    DELETE: (u, _, c) => httpClient.Delete<ApiResponse<T>>(u, c),
-    HEAD: (u, _, c) => httpClient.Head<ApiResponse<T>>(u, c),
-    OPTIONS: (u, _, c) => httpClient.Options<ApiResponse<T>>(u, c),
+) {
+  const methodMap = {
+    GET: (u: string, _, c?: RequestConfig) => httpClient.Get<T>(u, c),
+    POST: (u: string, d: unknown, c?: RequestConfig) => httpClient.Post<T>(u, d, c),
+    PUT: (u: string, d: unknown, c?: RequestConfig) => httpClient.Put<T>(u, d, c),
+    PATCH: (u: string, d: unknown, c?: RequestConfig) => httpClient.Patch<T>(u, d, c),
+    DELETE: (u: string, _, c?: RequestConfig) => httpClient.Delete<T>(u, c),
+    HEAD: (u: string, _, c?: RequestConfig) => httpClient.Head<T>(u, c),
+    OPTIONS: (u: string, _, c?: RequestConfig) => httpClient.Options<T>(u, c),
   }
 
   return methodMap[type](url, data, config)
@@ -138,23 +138,23 @@ export const api = {
   /**
    * 获取原始 Method 实例（用于 useQuery/useMutation）
    */
-  getMethod<T>(url: string, config?: RequestConfig): Method<ApiResponse<T>> {
+  getMethod<T>(url: string, config?: RequestConfig) {
     return createMethod<T>('GET', url, undefined, config)
   },
 
-  postMethod<T>(url: string, data?: unknown, config?: RequestConfig): Method<ApiResponse<T>> {
+  postMethod<T>(url: string, data?: unknown, config?: RequestConfig) {
     return createMethod<T>('POST', url, data, config)
   },
 
-  putMethod<T>(url: string, data?: unknown, config?: RequestConfig): Method<ApiResponse<T>> {
+  putMethod<T>(url: string, data?: unknown, config?: RequestConfig) {
     return createMethod<T>('PUT', url, data, config)
   },
 
-  patchMethod<T>(url: string, data?: unknown, config?: RequestConfig): Method<ApiResponse<T>> {
+  patchMethod<T>(url: string, data?: unknown, config?: RequestConfig) {
     return createMethod<T>('PATCH', url, data, config)
   },
 
-  deleteMethod<T>(url: string, config?: RequestConfig): Method<ApiResponse<T>> {
+  deleteMethod<T>(url: string, config?: RequestConfig) {
     return createMethod<T>('DELETE', url, undefined, config)
   },
 

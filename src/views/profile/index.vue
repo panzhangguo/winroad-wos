@@ -1,8 +1,8 @@
 <script setup lang="ts">
+import type { UserProfile } from '@/types'
 import { message } from 'antdv-next'
+import { md5 } from 'js-md5'
 import {
-  Briefcase,
-  Building,
   Calendar,
   FileText,
   Loader2,
@@ -15,7 +15,7 @@ import {
   User,
 } from 'lucide-vue-next'
 import { computed, onMounted, reactive, ref } from 'vue'
-import { authApi } from '@/api'
+import { authApi, usersApi } from '@/api'
 import { TPageHeader } from '@/components/business'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
@@ -33,21 +33,26 @@ import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 import { useAuthStore } from '@/stores/global/auth'
 
+/**
+ * 路由实例
+ */
+const router = useRouter()
 const authStore = useAuthStore()
 
 /** 表单验证错误 */
 const formErrors = reactive<Record<string, string>>({})
 
 /** 个人资料表单 */
-const profileForm = reactive({
-  name: '',
-  email: '',
-  phone: '',
+const profileForm = reactive<Partial<UserProfile>>({
+  realName: '',
+  account: '',
+  telePhone: '',
   avatar: '',
-  address: '',
-  department: '',
+  postalAddress: '',
   position: '',
-  bio: '',
+  creatorTime: 0,
+  email: '',
+  organize: '',
 })
 
 /** 加载状态 */
@@ -63,6 +68,8 @@ const passwordDialog = reactive({
   oldPassword: '',
   newPassword: '',
   confirmPassword: '',
+  code: '',
+  timestamp: '',
 })
 
 /** 密码错误 */
@@ -74,17 +81,20 @@ const avatarInputRef = ref<HTMLInputElement | null>(null)
 /**
  * 初始化表单数据
  */
-function initProfileForm() {
-  const user = authStore.user
+async function initProfileForm() {
+  const user = await usersApi.getUserBaseInfo()
+  // const user = authStore.user
   if (user) {
-    profileForm.name = user.name || ''
-    profileForm.email = user.email || ''
-    profileForm.phone = user.phone || ''
+    profileForm.realName = user.realName || ''
+    profileForm.account = user.account || ''
+    profileForm.telePhone = user.telePhone || ''
     profileForm.avatar = user.avatar || ''
-    profileForm.address = user.address || ''
-    profileForm.department = user.department || ''
+    profileForm.postalAddress = user.postalAddress || ''
     profileForm.position = user.position || ''
-    profileForm.bio = user.bio || ''
+    profileForm.creatorTime = user.creatorTime || 0
+    profileForm.email = user.email || ''
+    profileForm.organize = user.organize || ''
+    profileForm.signature = user.signature || ''
   }
 }
 
@@ -98,20 +108,22 @@ function validateProfileForm(): boolean {
 
   let isValid = true
 
-  if (!profileForm.name.trim()) {
-    formErrors.name = '请输入姓名'
+  if (!profileForm.realName.trim()) {
+    formErrors.realName = '请输入姓名'
     isValid = false
   }
-  else if (profileForm.name.length < 2 || profileForm.name.length > 20) {
-    formErrors.name = '姓名长度应在 2-20 个字符之间'
-    isValid = false
-  }
-
-  if (profileForm.phone && !/^1[3-9]\d{9}$/.test(profileForm.phone)) {
-    formErrors.phone = '请输入有效的手机号码'
+  else if (profileForm.realName.length < 2 || profileForm.realName.length > 20) {
+    formErrors.realName = '姓名长度应在 2-20 个字符之间'
     isValid = false
   }
 
+  // eslint-disable-next-line e18e/prefer-static-regex
+  if (profileForm.telePhone && !/^1[3-9]\d{9}$/.test(profileForm.telePhone)) {
+    formErrors.telePhone = '请输入有效的手机号码'
+    isValid = false
+  }
+
+  // eslint-disable-next-line e18e/prefer-static-regex
   if (profileForm.email && !/^[^\s@]+@[^\s@][^\s.@]*\.[^\s@]+$/.test(profileForm.email)) {
     formErrors.email = '请输入有效的邮箱地址'
     isValid = false
@@ -130,19 +142,20 @@ async function handleSaveProfile() {
 
   loadingStates.profile = true
   try {
-    const updatedUser = await authApi.updateProfile({
-      name: profileForm.name,
-      phone: profileForm.phone,
-      address: profileForm.address,
-      department: profileForm.department,
-      position: profileForm.position,
-      bio: profileForm.bio,
-      avatar: profileForm.avatar,
+    await authApi.updateProfile({
+      realName: profileForm.realName,
+      telePhone: profileForm.telePhone,
+      postalAddress: profileForm.postalAddress,
+      signature: profileForm.signature,
+      email: profileForm.email,
     })
 
     // 更新 store 中的用户信息
-    if (authStore.user && updatedUser) {
-      Object.assign(authStore.user, updatedUser)
+    if (authStore.user) {
+      Object.assign(authStore.user, {
+        userAccount: profileForm.account,
+        userName: profileForm.realName,
+      })
     }
 
     message.success('个人资料保存成功')
@@ -187,16 +200,16 @@ async function handleAvatarChange(event: Event) {
 
   loadingStates.avatar = true
   try {
-    const result = await authApi.uploadAvatar(file) as { avatarUrl: string }
-    const avatarUrl = result.avatarUrl
+    const result = await authApi.uploadAvatar(file) as { url: string, name: string }
+    const avatarUrl = result.url
     profileForm.avatar = avatarUrl
 
     // 同时更新用户资料
-    await authApi.updateProfile({ avatar: avatarUrl })
+    await authApi.updateProfileAvatar(result.name)
 
     // 更新 store
     if (authStore.user) {
-      authStore.user.avatar = avatarUrl
+      authStore.user.headIcon = avatarUrl
     }
 
     message.success('头像上传成功')
@@ -215,6 +228,11 @@ async function handleAvatarChange(event: Event) {
 }
 
 /**
+ * 验证码图片URL
+ */
+const captchaUrl = ref('')
+
+/**
  * 打开修改密码弹窗
  */
 function handleOpenPasswordDialog() {
@@ -222,9 +240,27 @@ function handleOpenPasswordDialog() {
   passwordDialog.oldPassword = ''
   passwordDialog.newPassword = ''
   passwordDialog.confirmPassword = ''
+  passwordDialog.code = ''
+
   passwordErrors.oldPassword = ''
   passwordErrors.newPassword = ''
   passwordErrors.confirmPassword = ''
+  passwordErrors.code = ''
+  passwordDialog.timestamp = ''
+
+  refreshCaptcha()
+}
+
+/**
+ * 刷新验证码
+ */
+async function refreshCaptcha() {
+  // 这里需要调用后端API获取验证码图片
+  // 示例: captchaUrl.value = `/api/auth/captcha?${Date.now()}`
+  // 暂时使用占位符
+  const timestamp = `${Math.random()}`
+  passwordDialog.timestamp = timestamp
+  captchaUrl.value = `/api/oauth/ImageCode/3/${timestamp}`
 }
 
 /**
@@ -274,12 +310,17 @@ async function handleChangePassword() {
   loadingStates.password = true
   try {
     await authApi.changePassword({
-      oldPassword: passwordDialog.oldPassword,
-      newPassword: passwordDialog.newPassword,
+      oldPassword: md5(passwordDialog.oldPassword),
+      password: md5(passwordDialog.newPassword),
+      code: passwordDialog.code,
+      timestamp: passwordDialog.timestamp,
     })
 
     message.success('密码修改成功')
     passwordDialog.open = false
+    // 修改成功后，需要重新登录才能生效
+    authStore.logout()
+    router.push('/login')
   }
   catch (error) {
     console.error('修改密码失败:', error)
@@ -292,11 +333,11 @@ async function handleChangePassword() {
 
 /** 获取用户首字母 */
 const userInitials = computed(() => {
-  return profileForm.name?.charAt(0).toUpperCase() || 'U'
+  return profileForm.realName?.charAt(0).toUpperCase() || 'U'
 })
 
 /** 格式化日期 */
-function formatDate(dateString?: string) {
+function formatDate(dateString?: number) {
   if (!dateString)
     return '-'
   return new Date(dateString).toLocaleDateString('zh-CN')
@@ -377,13 +418,13 @@ onMounted(() => {
                   <span class="text-destructive">*</span>
                 </Label>
                 <Input
-                  id="name"
-                  v-model="profileForm.name"
-                  :class="{ 'border-destructive': formErrors.name }"
+                  id="realName"
+                  v-model="profileForm.realName"
+                  :class="{ 'border-destructive': formErrors.realName }"
                   placeholder="请输入姓名"
                 />
-                <p v-if="formErrors.name" class="text-xs text-destructive">
-                  {{ formErrors.name }}
+                <p v-if="formErrors.realName" class="text-xs text-destructive">
+                  {{ formErrors.realName }}
                 </p>
               </div>
 
@@ -394,52 +435,22 @@ onMounted(() => {
                   id="email"
                   v-model="profileForm.email"
                   type="email"
-                  disabled
                 />
-                <p class="text-xs text-muted-foreground">
-                  邮箱不可修改
-                </p>
               </div>
 
               <!-- 电话 -->
               <div class="space-y-2">
                 <Label for="phone">电话</Label>
                 <Input
-                  id="phone"
-                  v-model="profileForm.phone"
+                  id="telePhone"
+                  v-model="profileForm.telePhone"
                   type="tel"
-                  :class="{ 'border-destructive': formErrors.phone }"
+                  :class="{ 'border-destructive': formErrors.telePhone }"
                   placeholder="请输入手机号码"
                 />
-                <p v-if="formErrors.phone" class="text-xs text-destructive">
-                  {{ formErrors.phone }}
+                <p v-if="formErrors.telePhone" class="text-xs text-destructive">
+                  {{ formErrors.telePhone }}
                 </p>
-              </div>
-
-              <!-- 部门 -->
-              <div class="space-y-2">
-                <Label for="department">
-                  <Building class="h-3.5 w-3.5 inline mr-1" />
-                  部门
-                </Label>
-                <Input
-                  id="department"
-                  v-model="profileForm.department"
-                  placeholder="请输入部门"
-                />
-              </div>
-
-              <!-- 职位 -->
-              <div class="space-y-2">
-                <Label for="position">
-                  <Briefcase class="h-3.5 w-3.5 inline mr-1" />
-                  职位
-                </Label>
-                <Input
-                  id="position"
-                  v-model="profileForm.position"
-                  placeholder="请输入职位"
-                />
               </div>
 
               <!-- 地址 -->
@@ -450,7 +461,7 @@ onMounted(() => {
                 </Label>
                 <Input
                   id="address"
-                  v-model="profileForm.address"
+                  v-model="profileForm.postalAddress"
                   placeholder="请输入地址"
                 />
               </div>
@@ -464,7 +475,7 @@ onMounted(() => {
               </Label>
               <textarea
                 id="bio"
-                v-model="profileForm.bio"
+                v-model="profileForm.signature"
                 rows="4"
                 class="w-full px-3 py-2 rounded-md border border-input bg-background text-sm resize-none focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
                 placeholder="请输入个人简介"
@@ -497,9 +508,9 @@ onMounted(() => {
               <Mail class="h-4 w-4 text-muted-foreground" />
               <div>
                 <p class="text-xs text-muted-foreground">
-                  邮箱
+                  账号
                 </p>
-                <p>{{ authStore.user?.email }}</p>
+                <p>{{ authStore.user?.userAccount }}</p>
               </div>
             </div>
             <Separator />
@@ -509,7 +520,7 @@ onMounted(() => {
                 <p class="text-xs text-muted-foreground">
                   角色
                 </p>
-                <p>{{ authStore.user?.role }}</p>
+                <p>{{ authStore.user?.roleName }}</p>
               </div>
             </div>
             <Separator />
@@ -517,9 +528,9 @@ onMounted(() => {
               <User class="h-4 w-4 text-muted-foreground" />
               <div>
                 <p class="text-xs text-muted-foreground">
-                  状态
+                  所属组织
                 </p>
-                <p>{{ authStore.user?.status === 'active' ? '正常' : '停用' }}</p>
+                <p>{{ profileForm.organize }}</p>
               </div>
             </div>
             <Separator />
@@ -529,7 +540,7 @@ onMounted(() => {
                 <p class="text-xs text-muted-foreground">
                   注册时间
                 </p>
-                <p>{{ formatDate(authStore.user?.createdAt) }}</p>
+                <p>{{ formatDate(profileForm.creatorTime) }}</p>
               </div>
             </div>
           </CardContent>
@@ -553,7 +564,7 @@ onMounted(() => {
         </Card>
 
         <!-- 危险区域卡片 -->
-        <Card class="bg-muted/40 border border-border/50 rounded-xl border-destructive/50">
+        <!-- <Card class="bg-muted/40 border border-border/50 rounded-xl border-destructive/50">
           <CardHeader>
             <CardTitle class="text-destructive">
               危险区域
@@ -565,7 +576,7 @@ onMounted(() => {
               删除账户
             </Button>
           </CardContent>
-        </Card>
+        </Card> -->
       </div>
     </div>
 
@@ -629,6 +640,32 @@ onMounted(() => {
             <p v-if="passwordErrors.confirmPassword" class="text-xs text-destructive">
               {{ passwordErrors.confirmPassword }}
             </p>
+          </div>
+          <!-- 验证码 -->
+          <div class="space-y-2">
+            <Label for="verifyCode">
+              验证码
+              <span class="text-destructive">*</span>
+            </Label>
+            <div class="flex items-center gap-3">
+              <Input
+                id="verifyCode"
+                v-model="passwordDialog.code"
+                type="text"
+                :class="{ 'border-destructive': passwordErrors.verifyCode }"
+                placeholder="请输入验证码"
+              />
+              <p v-if="passwordErrors.verifyCode" class="text-xs text-destructive">
+                {{ passwordErrors.verifyCode }}
+              </p>
+              <img
+                :src="captchaUrl"
+                alt="验证码"
+                class="h-9 w-24 object-cover rounded-md cursor-pointer"
+                :style="{ borderRadius: `calc(var(--radius))` }"
+                @click="refreshCaptcha"
+              >
+            </div>
           </div>
         </div>
         <DialogFooter>

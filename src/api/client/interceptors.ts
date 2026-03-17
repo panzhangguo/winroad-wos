@@ -3,6 +3,7 @@
  */
 
 import type { Method } from 'alova'
+// eslint-disable-next-line e18e/ban-dependencies
 import type { AxiosError, AxiosResponse } from 'axios'
 import { STORAGE_KEYS } from '@/constants/common'
 import router from '@/router'
@@ -210,6 +211,7 @@ function handleUnauthorized(): void {
 
     // 如果当前不在登录页，才导航到登录页
     if (currentPath !== '/login') {
+      console.warn('强制跳转', currentPath)
       router.push({
         name: 'Login',
         query: currentPath !== '/' && currentPath !== '/login' ? { redirect: currentPath } : undefined,

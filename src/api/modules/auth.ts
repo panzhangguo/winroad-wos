@@ -28,7 +28,9 @@ export interface LoginResponse {
  */
 export interface ChangePasswordParams {
   oldPassword: string
-  newPassword: string
+  password: string
+  code: string
+  timestamp: string
 }
 
 /**
@@ -66,7 +68,15 @@ export const authApi = {
    * @returns 更新后的用户信息
    */
   updateProfile: (data: UpdateProfileParams) =>
-    request.put<User>('/auth/profile', data),
+    request.put<User>('/permission/Users/Current/BaseInfo', data),
+
+  /**
+   * 更新当前用户个人头像
+   * @param avatar - 头像 URL
+   * @returns 更新后的用户信息
+   */
+  updateProfileAvatar: (avatar: string) =>
+    request.put(`/permission/Users/Current/Avatar/${avatar}`),
 
   /**
    * 刷新 Token
@@ -81,7 +91,7 @@ export const authApi = {
    * @returns 修改结果
    */
   changePassword: (data: ChangePasswordParams) =>
-    request.post<void>('/auth/change-password', data),
+    request.post<void>('/permission/Users/Current/Actions/ModifyPassword', data),
 
   /**
    * 发送验证码
@@ -112,8 +122,8 @@ export const authApi = {
    */
   uploadAvatar: (file: File) => {
     const formData = new FormData()
-    formData.append('avatar', file)
-    return request.post<{ avatarUrl: string }>('/auth/avatar', formData, {
+    formData.append('file', file)
+    return request.post<{ url: string, name: string }>('/file/Uploader/userAvatar', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },

@@ -1,4 +1,4 @@
-import type { CreateUserParams, GetUsersParams, PaginationData, UpdateUserParams, User } from '@/types'
+import type { CreateUserParams, GetUsersParams, PaginationData, UpdateUserParams, User, UserProfile } from '@/types'
 /**
  * 用户管理相关 API
  * @description 用户的增删改查等接口
@@ -65,15 +65,6 @@ export const usersApi = {
     request.post<void>('/users/batch-delete', { ids }),
 
   /**
-   * 更新用户状态
-   * @param id - 用户 ID
-   * @param status - 新状态
-   * @returns 更新结果
-   */
-  updateUserStatus: (id: string, status: User['status']) =>
-    request.patch<User>(`/users/${id}/status`, { status }),
-
-  /**
    * 上传用户头像
    * @param id - 用户 ID
    * @param file - 头像文件
@@ -88,4 +79,9 @@ export const usersApi = {
       },
     })
   },
+
+  /**
+   * 当前用户基础信息
+   */
+  getUserBaseInfo: () => request.get<UserProfile>(`/permission/Users/Current/BaseInfo`),
 }

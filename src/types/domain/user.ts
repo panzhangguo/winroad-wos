@@ -80,17 +80,59 @@ export interface User {
   systemIds: UserSystemItem[]
 }
 
+export interface UserProfile {
+  id: string
+  account: string
+  realName: string
+  organizeId: string
+  organize: string // 例如: "顶层组织/客户"
+  position: string // 原数据为空字符串
+  manager: string // 原数据格式: "姓名/账号"
+  roleId: string // 原数据为逗号分隔的角色名: "客户,普通用户"
+  creatorTime: number // 时间戳
+  prevLogTime: number // 时间戳
+  signature: string | null
+  gender: string // 原数据为字符串 "3"
+  nation: string
+  nativePlace: string
+  entryDate: number // 时间戳
+  certificatesType: string
+  certificatesNumber: string
+  education: string
+  birthday: number // 时间戳
+  telePhone: string
+  landline: string
+  mobilePhone: string
+  email: string
+  urgentContacts: string
+  urgentTelePhone: string
+  postalAddress: string
+  theme: string // 颜色值 "#1890ff"
+  language: string | null
+  avatar: string // 图片路径
+  themeClass: string | null
+  layoutType: string | null
+  slideClass: string | null
+  tagsIcon: boolean
+  showLanguage: boolean
+  showSearch: boolean
+  useCache: boolean
+  uniqueOpened: boolean
+  tagsView: boolean
+  positionId: string
+  roleIds: string // 原数据为逗号分隔的ID: "id1,id2"
+}
+
 /**
  * 更新个人资料参数
  */
 export interface UpdateProfileParams {
-  name?: string
-  phone?: string
-  address?: string
-  department?: string
+  realName?: string
+  signature?: string
+  telePhone?: string
+  email?: string
+  postalAddress?: string
   position?: string
-  bio?: string
-  avatar?: string
 }
 
 /**
@@ -101,6 +143,7 @@ export interface GetUsersParams {
   pageSize?: number
   keyword?: string
   role?: UserRole
+  search?: string
   status?: UserStatus
 }
 

@@ -28,7 +28,7 @@ const router = useRouter()
  * 用户姓名首字母
  */
 const userInitials = computed(() => {
-  return authStore.user?.name?.charAt(0).toUpperCase() || 'U'
+  return authStore.user?.userName?.charAt(0).toUpperCase() || 'U'
 })
 
 /**
@@ -73,7 +73,7 @@ async function handleLogout() {
           <!-- 用户头像 -->
           <div class="relative flex-shrink-0">
             <Avatar class="h-9 w-9 ring-2 ring-primary/20 transition-all duration-200 group-hover:ring-primary/40">
-              <AvatarImage v-if="authStore.user?.avatar" :src="authStore.user.avatar" />
+              <AvatarImage v-if="authStore.user?.headIcon" :src="authStore.user.headIcon" />
               <AvatarFallback class="bg-primary/10 text-primary text-sm font-semibold">
                 {{ userInitials }}
               </AvatarFallback>
@@ -84,7 +84,7 @@ async function handleLogout() {
           <!-- 用户信息 -->
           <div class="flex flex-col min-w-0 flex-1 text-left">
             <span class="text-sm font-medium truncate group-hover:text-primary transition-colors duration-200">
-              {{ authStore.user?.name || '用户' }}
+              {{ authStore.user?.userName || '用户' }}
             </span>
             <span class="text-[11px] text-muted-foreground truncate">
               {{ authStore.user?.email || 'user@example.com' }}
